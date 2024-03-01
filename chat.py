@@ -34,7 +34,7 @@ def main(model_name: str):
             continue
 
         model_input = template['prompt'].format(instruction=user_input)
-        sequence = pipeline(model_input, temperature=1.0, num_return_sequences=1, max_new_tokens=64)
+        sequence = pipeline(model_input, temperature=1.0, num_return_sequences=1, max_new_tokens=256)
         generated_text = sequence[0]['generated_text'][len(model_input):]
 
         # Append the user prompt and the model's response to the chat history
