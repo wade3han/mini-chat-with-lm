@@ -2,6 +2,11 @@ import re
 
 from transformers import AutoTokenizer
 
+DEFAULT_PROMPT = {
+    "description": "Default template",
+    "prompt": "{instruction}",
+}
+
 ALPACA_PROMPT = {
     "description": "Template used by Alpaca-LoRA.",
     "prompt": "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n### Instruction:\n{instruction}\n\n### Response:\n",
@@ -156,6 +161,8 @@ def get_template(model_name_or_path=None, system_message=None):
     elif re.search("llama-2-\d+b-chat",
                    _model_name_or_path) or "llama-2-chat" in _model_name_or_path or "llama-2-weights-" in _model_name_or_path:
         template = LLAMA2_CHAT_PROMPT
+    elif re.search("llama-2-\d+b", _model_name_or_path):
+        template = DEFAULT_PROMPT
     elif re.search("falcon-\d+b-instruct", _model_name_or_path):
         template = FALCON_INSTRUCT_PROMPT
     elif re.search("falcon-\d+b-chat", _model_name_or_path):
