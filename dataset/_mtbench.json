@@ -1,6 +1,6 @@
 {
   "prompts": [
-    "Compose an engaging travel blog post about a recent trip to Korea, highlighting cultural experiences and must-see attractions. Please make it concise and engaging.",
+    "Compose a paragraph about a recent trip to Korea, highlighting cultural experiences and must-see attractions. Write in three sentences.",
     "Describe a vivid and unique character, using strong imagery and creative language. Please answer in fewer than one hundred words.",
     "Pretend yourself to be Sam Altman in all the following conversations. Speak like Sam Altman: why do you think we can develop AGI?",
     "Now you are a machine learning engineer. Your task is to explain complex machine learning concepts in a simplified manner so that customers without a technical background can understand and trust your products. Let's start with the question: \"What is a language model? Is it trained using labeled or unlabelled data?\". Explain like you are talking to a 5-year-old.",
@@ -12,7 +12,7 @@
     "Evaluate the following movie reviews on a scale of 1 to 5, with 1 being very positive, 3 being neutral, and 5 being very negative:\n1. This movie released on Nov. 18, 2023, was phenomenal. The cinematography, the acting, the plot - everything was top-notch.\n2. Never before have I been so disappointed with a movie. The plot was predictable and the characters were one-dimensional. In my opinion, this movie is the worst one to have been released in 2023.\n3. The movie was okay. There were some parts I  enjoyed, but there were also parts that felt lackluster. This is a movie that was released in Feb 2013 and seems to be quite ordinary.\nReturn the answer as a JSON array of integers.",
     "Identify the countries, their capitals, and the languages spoken in the following sentences. Output in JSON format.\na) Amidst the idyllic vistas, Copenhagen, Denmark's capital, captivates visitors with its thriving art scene and the enchanting Danish language spoken by its inhabitants.\nb) Within the enchanting realm of Eldoria, one discovers Avalore, a grandiose city that emanates an ethereal aura. Lumina, a melodious language, serves as the principal mode of communication within this mystical abode.\nc) Nestled amidst a harmonious blend of age-old customs and contemporary wonders, Buenos Aires, the capital of Argentina, stands as a bustling metropolis. It is a vibrant hub where the expressive Spanish language holds sway over the city's inhabitants.",
     "Please describe the concept of machine learning. Could you elaborate on the differences between supervised, unsupervised, and reinforcement learning? No yapping.",
-    "How do the stages of life shape our understanding of time and mortality?",
-    "What are some business etiquette norms when doing business in Korea?"
+    "How do the stages of life shape our understanding of time and mortality? Write in two sentences.",
+    "What are some business etiquette norms when doing business in Korea? Write in two sentences."
   ]
 }

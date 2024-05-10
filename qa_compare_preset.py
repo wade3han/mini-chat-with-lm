@@ -1,10 +1,13 @@
 import argparse
+import gc
 import random
 
 import torch
 from termcolor import colored
+from vllm import SamplingParams
+from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 
-from utils import get_template, read_dataset, load_hf_model_and_tokenizer
+from utils import get_template, read_dataset, load_vllm_model
 
 
 @torch.no_grad()
@@ -12,42 +15,34 @@ def main(model_name_a: str, model_name_b: str, chat_template_a: str, chat_templa
     print(colored(f"model_name: {model_name_a} vs {model_name_b}", 'blue'))
 
     dataset = read_dataset(preset)
-
+    sampling_params = SamplingParams(
+        max_tokens=1024,
+        temperature=0.0,
+    )
     # get model_a results first.
-    model, tokenizer = load_hf_model_and_tokenizer(model_name_a)
+    model = load_vllm_model(model_name_a)
     template = get_template(chat_template=chat_template_a, model_name_or_path=model_name_a)
 
-    output_a = []
-    for i, prompt in enumerate(dataset):
-        model_input = template['prompt'].format(instruction=prompt)
-        tokenized_model_input = tokenizer(model_input, return_tensors='pt', padding='max_length', max_length=1024,
-                                          truncation=True).to('cuda')
-        sequence = model.generate(**tokenized_model_input,
-                                  do_sample=False,
-                                  num_return_sequences=1,
-                                  pad_token_id=tokenizer.eos_token_id,
-                                  max_new_tokens=1024)
-        generated_text = tokenizer.decode(sequence[0][len(tokenized_model_input["input_ids"][0]):],
-                                          skip_special_tokens=True)
-        output_a.append(generated_text)
+    formatted_prompts = [template['prompt'].format(instruction=prompt) for prompt in dataset]
+    output_a = model.generate(prompts=formatted_prompts, sampling_params=sampling_params)
+    output_a = [it.outputs[0].text.strip() for it in output_a]
+
+    del model
+    torch.cuda.empty_cache()
+    gc.collect()
+    destroy_model_parallel()
 
     # get model_b results.
-    model, tokenizer = load_hf_model_and_tokenizer(model_name_b)
+    model = load_vllm_model(model_name_b)
     template = get_template(chat_template=chat_template_b, model_name_or_path=model_name_b)
+    formatted_prompts = [template['prompt'].format(instruction=prompt) for prompt in dataset]
+    output_b = model.generate(prompts=formatted_prompts, sampling_params=sampling_params)
+    output_b = [it.outputs[0].text.strip() for it in output_b]
 
-    output_b = []
-    for i, prompt in enumerate(dataset):
-        model_input = template['prompt'].format(instruction=prompt)
-        tokenized_model_input = tokenizer(model_input, return_tensors='pt', padding='max_length', max_length=1024,
-                                          truncation=True).to('cuda')
-        sequence = model.generate(**tokenized_model_input,
-                                  do_sample=False,
-                                  num_return_sequences=1,
-                                  pad_token_id=tokenizer.eos_token_id,
-                                  max_new_tokens=1024)
-        generated_text = tokenizer.decode(sequence[0][len(tokenized_model_input["input_ids"][0]):],
-                                          skip_special_tokens=True)
-        output_b.append(generated_text)
+    del model
+    torch.cuda.empty_cache()
+    gc.collect()
+    destroy_model_parallel()
 
     # compare the outputs.
     vote_a_or_b = []
@@ -57,19 +52,26 @@ def main(model_name_a: str, model_name_b: str, chat_template_a: str, chat_templa
             print(colored(f"Prompt: {prompt}", "yellow"))
             print(colored(f"[MODEL 1]: {a}", 'cyan'))
             print(colored(f"[MODEL 2]: {b}", 'magenta'))
-            vote = input(colored("Which model is better? (1/2): ", "yellow"))
-            vote_a_or_b.append('a' if vote == '1' else 'b')
+            vote = input(colored("Which model is better? (1/2/x): ", "yellow"))
+            if vote == 'x':
+                vote_a_or_b.append('tie')
+            else:
+                vote_a_or_b.append('a' if vote == '1' else 'b')
         else:
             print(colored(f"Prompt: {prompt}", "yellow"))
             print(colored(f"[MODEL 1]: {b}", 'cyan'))
             print(colored(f"[MODEL 2]: {a}", 'magenta'))
-            vote = input(colored("Which model is better? (1/2): ", "yellow"))
-            vote_a_or_b.append('b' if vote == '1' else 'a')
+            vote = input(colored("Which model is better? (1/2/x): ", "yellow"))
+            if vote == 'x':
+                vote_a_or_b.append('tie')
+            else:
+                vote_a_or_b.append('b' if vote == '1' else 'a')
 
     print(colored(f"Votes: {vote_a_or_b}", "blue"))
     a_count = vote_a_or_b.count('a')
     b_count = vote_a_or_b.count('b')
-    print(colored(f"Model 1: {a_count}, Model 2: {b_count}", "blue"))
+    tie_count = vote_a_or_b.count('tie')
+    print(colored(f"Model A: {a_count}, Model B: {b_count}, Tie: {tie_count}", "blue"))
 
 
 if __name__ == "__main__":

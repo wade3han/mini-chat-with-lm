@@ -3,7 +3,9 @@ import os
 
 import torch
 import transformers
+import vllm
 from transformers import AutoTokenizer
+from vllm import LLM
 
 ALPACA_PROMPT = {
     "description": "Template used by Alpaca-LoRA.",
@@ -218,6 +220,8 @@ def read_dataset(preset: str) -> list[str]:
         paths = sorted(os.listdir("dataset"))
         dataset = []
         for path in paths:
+            if path.startswith("_"):
+                continue
             with open(os.path.join("dataset", path), "r") as f:
                 dataset.extend(json.load(f)["prompts"])
     else:
@@ -237,3 +241,18 @@ def load_hf_model_and_tokenizer(model_name: str) -> tuple[transformers.AutoModel
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     tokenizer.pad_token_id = tokenizer.eos_token_id
     return model, tokenizer
+
+
+def load_vllm_model(model_name_or_path,
+                    dtype="auto",
+                    tokenizer_mode="auto",
+                    tensor_parallel_size=1,
+                    trust_remote_code=True) -> LLM:
+    model = vllm.LLM(
+        model=model_name_or_path,
+        dtype=dtype,
+        tokenizer_mode=tokenizer_mode,
+        tensor_parallel_size=tensor_parallel_size,
+        trust_remote_code=trust_remote_code,
+    )
+    return model

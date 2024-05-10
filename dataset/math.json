@@ -1,5 +1,7 @@
 {
   "prompts": [
-    "How should I calculate 35 * 234? You can write a code to solve this problem, using Python."
+    "How should I calculate 35 * 234? You can write a code to solve this problem, using Python.",
+    "x+z = 4m, x*z = 4m^2, express x-z in m",
+    "The vertices of a triangle are at points (0, 0), (-1, 1), and (3, 3). What is the area of the triangle?"
   ]
 }
