@@ -20,7 +20,7 @@ def main(model_name_a: str, model_name_b: str, chat_template_a: str, chat_templa
         temperature=0.0,
     )
     # get model_a results first.
-    model = load_vllm_model(model_name_a)
+    model = load_vllm_model(model_name_a, dtype=torch.bfloat16)
     template = get_template(chat_template=chat_template_a, model_name_or_path=model_name_a)
 
     formatted_prompts = [template['prompt'].format(instruction=prompt) for prompt in dataset]
@@ -33,7 +33,7 @@ def main(model_name_a: str, model_name_b: str, chat_template_a: str, chat_templa
     destroy_model_parallel()
 
     # get model_b results.
-    model = load_vllm_model(model_name_b)
+    model = load_vllm_model(model_name_b, dtype=torch.bfloat16)
     template = get_template(chat_template=chat_template_b, model_name_or_path=model_name_b)
     formatted_prompts = [template['prompt'].format(instruction=prompt) for prompt in dataset]
     output_b = model.generate(prompts=formatted_prompts, sampling_params=sampling_params)
