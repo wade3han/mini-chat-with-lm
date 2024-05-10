@@ -15,6 +15,8 @@ def main(model_name: str):
                                                               trust_remote_code=True,
                                                               torch_dtype=torch.bfloat16,
                                                               device_map="auto")
+    model = model.cuda()
+    model.eval()
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     template = get_template(model_name)
     print(colored(f"prompt: {template['prompt']}", 'blue'))
@@ -34,7 +36,7 @@ def main(model_name: str):
 
         model_input = template['prompt'].format(instruction=user_input)
         tokenized_model_input = tokenizer(model_input, return_tensors='pt', padding='max_length', max_length=1024,
-                                          truncation=True)
+                                          truncation=True).to('cuda')
         sequence = model.generate(**tokenized_model_input,
                                   temperature=0.0,
                                   num_return_sequences=1,
