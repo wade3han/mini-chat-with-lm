@@ -11,12 +11,11 @@ from template import get_template
 def main(model_name: str):
     print(colored(f"model_name: {model_name}", 'blue'))
 
-    pipeline = transformers.pipeline("text-generation",
-                                     model=model_name,
-                                     trust_remote_code=True,
-                                     torch_dtype=torch.bfloat16,
-                                     device_map="auto")
-
+    model = transformers.AutoModelForCausalLM.from_pretrained(model_name,
+                                                              trust_remote_code=True,
+                                                              torch_dtype=torch.bfloat16,
+                                                              device_map="auto")
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     template = get_template(model_name)
     print(colored(f"prompt: {template['prompt']}", 'blue'))
     print('\n\n')
@@ -34,8 +33,13 @@ def main(model_name: str):
             continue
 
         model_input = template['prompt'].format(instruction=user_input)
-        sequence = pipeline(model_input, temperature=1.0, num_return_sequences=1, max_new_tokens=256)
-        generated_text = sequence[0]['generated_text'][len(model_input):]
+        tokenized_model_input = tokenizer(model_input, return_tensors='pt', padding='max_length', max_length=1024,
+                                          truncation=True)
+        sequence = model.generate(**tokenized_model_input,
+                                  temperature=0.0,
+                                  num_return_sequences=1,
+                                  max_new_tokens=1024)
+        generated_text = tokenizer.decode(sequence[0], skip_special_tokens=True)
 
         # Append the user prompt and the model's response to the chat history
         chat_history.append((user_input, generated_text))
