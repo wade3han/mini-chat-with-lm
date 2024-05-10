@@ -1,24 +1,15 @@
 import argparse
 
 import torch
-import transformers
 from termcolor import colored
 
-from utils import get_template
+from utils import get_template, load_hf_model_and_tokenizer
 
 
 @torch.no_grad()
 def main(model_name: str, chat_template: str):
     print(colored(f"model_name: {model_name}", 'blue'))
-
-    model = transformers.AutoModelForCausalLM.from_pretrained(model_name,
-                                                              trust_remote_code=True,
-                                                              torch_dtype=torch.bfloat16,
-                                                              device_map="auto")
-    model = model.cuda()
-    model.eval()
-    tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    tokenizer.pad_token_id = tokenizer.eos_token_id
+    model, tokenizer = load_hf_model_and_tokenizer(model_name)
     template = get_template(chat_template=chat_template, model_name_or_path=model_name)
     print(colored(f"prompt: {template['prompt']}", 'blue'))
     print('\n\n')
@@ -42,8 +33,8 @@ def main(model_name: str, chat_template: str):
                                   num_return_sequences=1,
                                   pad_token_id=tokenizer.eos_token_id,
                                   max_new_tokens=1024)
-        generated_text = tokenizer.decode(sequence[0], skip_special_tokens=True)
-        generated_text = generated_text[len(model_input):]
+        generated_text = tokenizer.decode(sequence[0][len(tokenized_model_input["input_ids"][0]):],
+                                          skip_special_tokens=True)
 
         # Append the user prompt and the model's response to the chat history
 

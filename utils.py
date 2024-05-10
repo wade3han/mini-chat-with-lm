@@ -1,6 +1,8 @@
 import json
 import os
 
+import torch
+import transformers
 from transformers import AutoTokenizer
 
 ALPACA_PROMPT = {
@@ -213,7 +215,7 @@ def get_template(chat_template: str, model_name_or_path: str = None) -> dict:
 
 def read_dataset(preset: str) -> list[str]:
     if preset == "all":
-        paths = os.listdir("dataset")
+        paths = sorted(os.listdir("dataset"))
         dataset = []
         for path in paths:
             with open(os.path.join("dataset", path), "r") as f:
@@ -223,3 +225,15 @@ def read_dataset(preset: str) -> list[str]:
             dataset = json.load(f)["prompts"]
 
     return dataset
+
+
+def load_hf_model_and_tokenizer(model_name: str) -> tuple[transformers.AutoModelForCausalLM, transformers.AutoTokenizer]:
+    model = transformers.AutoModelForCausalLM.from_pretrained(model_name,
+                                                              trust_remote_code=True,
+                                                              torch_dtype=torch.bfloat16,
+                                                              device_map="auto")
+    model = model.cuda()
+    model.eval()
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+    tokenizer.pad_token_id = tokenizer.eos_token_id
+    return model, tokenizer
